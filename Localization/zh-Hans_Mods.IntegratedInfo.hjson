@@ -1,6 +1,6 @@
 Info: {
-	Obtain: Obtain
-	UsedFor: Used for
+	Obtain: 获取
+	UsedFor: 用于
 }
 
 Keybinds.InfoCheck.DisplayName: Info Check
