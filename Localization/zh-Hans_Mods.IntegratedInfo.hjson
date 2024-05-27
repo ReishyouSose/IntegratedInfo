@@ -1,6 +1,16 @@
 Info: {
+	None: 无
+	Hand: 徒手
+	Tile: 制作站
+	Ingrediant: 材料
 	Obtain: 获取
 	UsedFor: 用于
+
+	Shimmer: {
+		To: 拆解为
+		By: 拆解于
+		Transmutation: 嬗变
+	}
 }
 
 Keybinds.InfoCheck.DisplayName: Info Check

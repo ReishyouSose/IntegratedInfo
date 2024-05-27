@@ -1,6 +1,16 @@
 Info: {
+	None: None
+	Hand: Hand craftable
+	Tile: Craft station
+	Ingrediant: Materials
 	Obtain: Obtain
 	UsedFor: Used for
+
+	Shimmer: {
+		To: Decraft to
+		By: Decrafted by
+		Transmutation: Transmutation
+	}
 }
 
 Keybinds.InfoCheck.DisplayName: Info Check

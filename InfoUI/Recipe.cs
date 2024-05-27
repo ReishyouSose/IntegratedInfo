@@ -1,146 +1,270 @@
 ﻿using IntegratedInfo.InfoUI.ExtraUI;
-using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework;
 using RUIModule.RUIElements;
+using System.Collections.Generic;
+using System.Linq;
 using Terraria;
 using Terraria.GameContent;
+using Terraria.ID;
+using Terraria.ModLoader;
 using static IntegratedInfo.MiscHelper;
 
 namespace IntegratedInfo.InfoUI
 {
     public partial class InfoPanel
     {
-        private UICornerPanel recipePanel;
+        private UIBottom recipePanel;
         private UIItemSlot focus;
-        private UIContainerPanel recipeView;
+        private UIContainerPanel recipeView, tileView, ingrediantView;
         private void RegisterRecipePanel(UICornerPanel bg)
         {
             recipePanel = new();
-            recipePanel.SetSize(-30, 0, 1, 1);
-            recipePanel.Info.SetMargin(10);
+            recipePanel.SetPos(0, 62);
+            recipePanel.SetSize(-30, -62, 1, 1);
             bg.Register(recipePanel);
 
-            int top = 0;
-            focus = new();
-            focus.Events.OnLeftDown += evt =>
-            {
-                int type = Main.mouseItem.type;
-                focus.item.SetDefaults(type);
-                CheckRicpeFromItem(type);
-            };
-            recipePanel.Register(focus);
-            top += 62;
+            int bottom = 59;
 
             UICornerPanel recipeBg = new();
-            recipeBg.SetPos(0, top);
-            recipeBg.SetSize(0, -62, 1, 1);
+            recipeBg.SetSize(0, -bottom - 10, 1, 1);
             recipePanel.Register(recipeBg);
 
             recipeView = new(10);
-            recipeView.SetSize(-30, 0, 1, 1);
+            recipeView.SetSize(-20, 0, 1, 1);
             recipeView.autoPos = [5, 5];
             recipeView.VerticalEdge();
             recipeView.autoPosRule = innerUIEs =>
             {
+                int count = innerUIEs.Count;
+                if (count == 0)
+                    return;
                 int x = 0, y = recipeView.GetEdgeBlur()[0],
                     h = recipeView.autoPos[0].Value, w = recipeView.autoPos[1].Value;
-                bool first = true;
-                foreach (BaseUIElement uie in innerUIEs)
+                for (int i = 0; i < count; i++)
                 {
-                    uie.SetPos(x, y);
+                    BaseUIElement uie = innerUIEs[i];
                     if (uie is UIText)
                     {
-                        if (!first)
+                        uie.SetPos(x, y);
+                        y += 48;
+                        if (i + 1 < count && innerUIEs[i + 1] is UIImage)
                         {
-                            x = 0;
-                            y += 72 + h;
-                            uie.SetPos(x, y);
+                            y -= 20;
                         }
-                        x = 0;
-                        y += 28;
-                        if (first)
-                            first = false;
                     }
                     else if (uie is UIImage)
                     {
+                        uie.SetPos(x, y);
                         y += 10;
                     }
                     else
                     {
-                        if (x + uie.Width + w > recipeView.InnerWidth)
+                        if (x + uie.Width > recipeView.InnerWidth)
                         {
+                            x = 0;
                             y += uie.Height + h;
-                            uie.SetPos(0, y);
-                            x = uie.Width + w;
                         }
-                        else
-                            x += uie.Width + w;
+                        uie.SetPos(x, y);
+                        x += uie.Width + w;
+                        if (i + 1 < count && innerUIEs[i + 1] is UIText)
+                        {
+                            x = 0;
+                            y += uie.Height + 20;
+                        }
                     }
                 }
             };
             recipeBg.Register(recipeView);
 
-            VerticalScrollbar rv = new(62, true);
+            VerticalScrollbar rv = new(39);
             recipeView.SetVerticalScrollbar(rv);
             recipeBg.Register(rv);
+
+            UICornerPanel requirePanel = new();
+            requirePanel.SetPos(0, -bottom, 0, 1);
+            requirePanel.SetSize(0, bottom, 1);
+            requirePanel.Info.HiddenOverflow = true;
+            recipePanel.Register(requirePanel);
+
+            int left = 39 * 2 + 40;
+            tileView = new(10);
+            tileView.SetSize(left, 0, 0, 1);
+            tileView.HorizonEdge();
+            tileView.autoPos = [null, 5];
+            tileView.DrawRec[0] = Color.White;
+            requirePanel.Register(tileView);
+
+            HorizontalScrollbar th = new(39);
+            th.Info.Top.Pixel += 40;
+            tileView.SetHorizontalScrollbar(th);
+            requirePanel.Register(th);
+
+            UIImage line = new(TextureAssets.MagicPixel.Value);
+            line.SetSize(2, -20, 0, 1);
+            line.SetPos(left, 10);
+            requirePanel.Register(line);
+            left += 2;
+
+            ingrediantView = new(10);
+            ingrediantView.SetPos(left, 0);
+            ingrediantView.SetSize(-left, 0, 1, 1);
+            ingrediantView.HorizonEdge();
+            ingrediantView.autoPos = [null, 5];
+            ingrediantView.DrawRec[0] = Color.White;
+            requirePanel.Register(ingrediantView);
+
+            HorizontalScrollbar ih = new(39);
+            ih.Info.Top.Pixel += 40;
+            ingrediantView.SetHorizontalScrollbar(ih);
+            requirePanel.Register(ih);
         }
         private void CheckRicpeFromItem(int type = 0)
         {
             if (type == 0)
                 type = focus.item.type;
+            else
+                focus.item.SetDefaults(type);
             recipeView.ClearAllElements();
             if (type == 0)
                 return;
 
-            UIText obtain = new(GTV("Info.Obtain"));
-            obtain.SetSize(obtain.TextSize);
-            recipeView.AddElement(obtain);
-
-            Texture2D line = TextureAssets.MagicPixel.Value;
-            UIImage ol = new(line);
-            ol.SetSize(0, 2, 1);
-            recipeView.AddElement(ol);
+            HashSet<Recipe>[] targets = [[], [], []];
 
             foreach (Recipe recipe in Main.recipe)
             {
+                if (recipe.Disabled)
+                    continue;
                 if (recipe.createItem.type == type)
                 {
-                    UIRecipeSlot slot = new(recipe);
-                    AddRecipeSlotEvent(slot);
-                    recipeView.AddElement(slot);
+                    targets[0].Add(recipe);
+                }
+                else if (recipe.ContainsIngredient(type))
+                {
+                    targets[1].Add(recipe);
+                    if (!recipe.notDecraftable)
+                    {
+                        targets[2].Add(recipe);
+                    }
                 }
             }
 
-            UIText usedFor = new(GTV("Info.UsedFor"));
-            usedFor.SetSize(usedFor.TextSize);
-            recipeView.AddElement(usedFor);
-
-            UIImage ul = new(line);
-            ul.SetSize(0, 2, 1);
-            recipeView.AddElement(ul);
-
-            foreach (Recipe recipe in Main.recipe)
+            RegisterSlot("Obtain", targets[0], false);
+            RegisterSlot("UsedFor", targets[1], false);
+            RegisterSlot("Shimmer.To", ItemID.Sets.CraftingRecipeIndices[type], true);
+            RegisterSlot("Shimmer.By", targets[2], true);
+            TipAndLine("Shimmer.Transmutation");
+            int trans = ItemID.Sets.ShimmerTransformToItem[type];
+            bool any = false;
+            if (trans > ItemID.None)
             {
-                if (recipe.ContainsIngredient(type))
+                UISTLSlot slot = new(type, trans);
+                recipeView.AddElement(slot);
+                any = true;
+            }
+            for (int i = 0; i < ItemLoader.ItemCount; i++)
+            {
+                int target = ItemID.Sets.ShimmerTransformToItem[i];
+                if (target == type)
                 {
-                    UIRecipeSlot slot = new(recipe);
-                    AddRecipeSlotEvent(slot);
+                    UISTLSlot slot = new(i, type);
                     recipeView.AddElement(slot);
+                    any = true;
                 }
+            }
+            if (!any)
+            {
+                AddNoneResult();
             }
         }
-        private void AddRecipeSlotEvent(UIRecipeSlot slot)
+        private void TipAndLine(string key)
         {
-            slot.Events.OnLeftDown += evt =>
+            UIText tip = new(GTV("Info." + key));
+            tip.SetSize(tip.TextSize);
+            recipeView.AddElement(tip);
+
+            UIImage line = new(TextureAssets.MagicPixel.Value);
+            line.SetSize(0, 2, 1);
+            recipeView.AddElement(line);
+        }
+        private void RegisterRecipeSlot(Recipe recipe, bool shimmer)
+        {
+            UIRecipeSlot slot = new(recipe, shimmer);
+            if (slot.shimmer)
             {
-                if (slot.Avaliable)
+
+            }
+            else
+            {
+                slot.Events.OnLeftDown += evt =>
                 {
-                    Main.focusRecipe = slot.recipe.RecipeIndex;
-                }
-            };
+                    Recipe target = slot.recipe;
+                    if (slot.Avaliable)
+                    {
+                        Main.focusRecipe = target.RecipeIndex;
+                    }
+                    tileView.ClearAllElements();
+                    if (target.requiredTile.Count > 0)
+                    {
+                        foreach (int tile in target.requiredTile)
+                        {
+                            int item = TileLoader.tileTypeAndTileStyleToItemType[(tile, 0)];
+                            if (item > ItemID.None)
+                            {
+                                UIItemSlot slot = new(new(item), 0.75f);
+                                tileView.AddElement(slot);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        UIIconSlot slot = new(TextureAssets.Item[ItemID.PowerGlove].Value, 2, 0.75f)
+                        {
+                            hoverText = GTV("Info.Hand")
+                        };
+                        tileView.AddElement(slot);
+                    }
+                    ingrediantView.ClearAllElements();
+                    foreach (Item item in target.requiredItem)
+                    {
+                        UIItemSlot slot = new(item, 0.75f);
+                        ingrediantView.AddElement(slot);
+                    }
+                };
+            }
             slot.Events.OnLeftDoubleClick += evt =>
             {
                 CheckRicpeFromItem(slot.recipe.createItem.type);
             };
+            recipeView.AddElement(slot);
+        }
+        private void RegisterSlot(string key, IEnumerable<Recipe> target, bool shimmer)
+        {
+            TipAndLine(key);
+            if (target.Any())
+            {
+                foreach (Recipe recipe in target)
+                    RegisterRecipeSlot(recipe, shimmer);
+            }
+            else
+            {
+                AddNoneResult();
+            }
+        }
+        private void RegisterSlot(string key, IEnumerable<int> target, bool shimmer)
+        {
+            List<Recipe> result = [];
+            foreach (int i in target)
+            {
+                result.Add(Main.recipe[i]);
+            }
+            RegisterSlot(key, result, shimmer);
+        }
+
+        private void AddNoneResult()
+        {
+            UIText none = new(GTV("Info.None"));
+            none.SetSize(none.TextSize);
+            recipeView.AddElement(none);
         }
     }
 }

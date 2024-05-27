@@ -8,7 +8,16 @@
 		
 	</PropertyGroup>
 	<ItemGroup>
+		<Publicize Include="tModLoader" IncludeVirtualMembers="false" />
+	</ItemGroup>
+	<ItemGroup>
 	  <None Remove="Localization\en-US_Mods.IntegratedInfo.hjson" />
+	</ItemGroup>
+	<ItemGroup>
+	  <PackageReference Include="Krafs.Publicizer" Version="2.2.1">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\RUIModule\RUIModule.csproj" />
