@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using RUIModule.RUIElements;
 using System.Linq;
 using Terraria;
@@ -15,6 +16,9 @@ namespace IntegratedInfo.InfoUI.ExtraUI
             base.Update(gameTime);
             Slot.slotID = Main.availableRecipe.Contains(recipe.RecipeIndex) ? 2 : 0;
         }
+        public void DrawRecipe(SpriteBatch sb, Vector2 pos)
+        {
 
+        }
     }
 }

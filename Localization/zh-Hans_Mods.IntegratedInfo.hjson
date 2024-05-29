@@ -3,8 +3,11 @@ Info: {
 	Hand: 徒手
 	Tile: 制作站
 	Ingrediant: 材料
-	Obtain: 获取
+	Obtain: 合成
 	UsedFor: 用于
+	Dig: 挖掘
+	Bag: 板条箱 & 宝藏袋
+	NPCDrop: NPC掉落
 
 	Shimmer: {
 		To: 拆解为

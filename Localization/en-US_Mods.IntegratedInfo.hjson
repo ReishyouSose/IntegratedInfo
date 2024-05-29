@@ -3,8 +3,11 @@ Info: {
 	Hand: Hand craftable
 	Tile: Craft station
 	Ingrediant: Materials
-	Obtain: Obtain
+	Obtain: Recipe
 	UsedFor: Used for
+	Dig: Dig
+	Bag: Crate & Boss bag
+	NPCDrop: NPC drop
 
 	Shimmer: {
 		To: Decraft to

@@ -33,47 +33,7 @@ namespace IntegratedInfo.InfoUI
             recipeView.SetSize(-20, 0, 1, 1);
             recipeView.autoPos = [5, 5];
             recipeView.VerticalEdge();
-            recipeView.autoPosRule = innerUIEs =>
-            {
-                int count = innerUIEs.Count;
-                if (count == 0)
-                    return;
-                int x = 0, y = recipeView.GetEdgeBlur()[0],
-                    h = recipeView.autoPos[0].Value, w = recipeView.autoPos[1].Value;
-                for (int i = 0; i < count; i++)
-                {
-                    BaseUIElement uie = innerUIEs[i];
-                    if (uie is UIText)
-                    {
-                        uie.SetPos(x, y);
-                        y += 48;
-                        if (i + 1 < count && innerUIEs[i + 1] is UIImage)
-                        {
-                            y -= 20;
-                        }
-                    }
-                    else if (uie is UIImage)
-                    {
-                        uie.SetPos(x, y);
-                        y += 10;
-                    }
-                    else
-                    {
-                        if (x + uie.Width > recipeView.InnerWidth)
-                        {
-                            x = 0;
-                            y += uie.Height + h;
-                        }
-                        uie.SetPos(x, y);
-                        x += uie.Width + w;
-                        if (i + 1 < count && innerUIEs[i + 1] is UIText)
-                        {
-                            x = 0;
-                            y += uie.Height + 20;
-                        }
-                    }
-                }
-            };
+            AutoPosRule(recipeView);
             recipeBg.Register(recipeView);
 
             VerticalScrollbar rv = new(39);
@@ -152,7 +112,7 @@ namespace IntegratedInfo.InfoUI
             RegisterSlot("UsedFor", targets[1], false);
             RegisterSlot("Shimmer.To", ItemID.Sets.CraftingRecipeIndices[type], true);
             RegisterSlot("Shimmer.By", targets[2], true);
-            TipAndLine("Shimmer.Transmutation");
+            TipAndLine(recipeView, "Shimmer.Transmutation");
             int trans = ItemID.Sets.ShimmerTransformToItem[type];
             bool any = false;
             if (trans > ItemID.None)
@@ -173,18 +133,8 @@ namespace IntegratedInfo.InfoUI
             }
             if (!any)
             {
-                AddNoneResult();
+                AddNoneResult(recipeView);
             }
-        }
-        private void TipAndLine(string key)
-        {
-            UIText tip = new(GTV("Info." + key));
-            tip.SetSize(tip.TextSize);
-            recipeView.AddElement(tip);
-
-            UIImage line = new(TextureAssets.MagicPixel.Value);
-            line.SetSize(0, 2, 1);
-            recipeView.AddElement(line);
         }
         private void RegisterRecipeSlot(Recipe recipe, bool shimmer)
         {
@@ -239,7 +189,7 @@ namespace IntegratedInfo.InfoUI
         }
         private void RegisterSlot(string key, IEnumerable<Recipe> target, bool shimmer)
         {
-            TipAndLine(key);
+            TipAndLine(recipeView, key);
             if (target.Any())
             {
                 foreach (Recipe recipe in target)
@@ -247,7 +197,7 @@ namespace IntegratedInfo.InfoUI
             }
             else
             {
-                AddNoneResult();
+                AddNoneResult(recipeView);
             }
         }
         private void RegisterSlot(string key, IEnumerable<int> target, bool shimmer)
@@ -260,11 +210,11 @@ namespace IntegratedInfo.InfoUI
             RegisterSlot(key, result, shimmer);
         }
 
-        private void AddNoneResult()
+        private static void AddNoneResult(UIContainerPanel view)
         {
             UIText none = new(GTV("Info.None"));
             none.SetSize(none.TextSize);
-            recipeView.AddElement(none);
+            view.AddElement(none);
         }
     }
 }
