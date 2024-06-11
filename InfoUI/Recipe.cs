@@ -136,6 +136,19 @@ namespace IntegratedInfo.InfoUI
                 AddNoneResult(recipeView);
             }
         }
+        private void CheckRecipeFromMod(string name)
+        {
+            if (ModLoader.TryGetMod(name, out Mod mod))
+            {
+                foreach (Recipe recipe in Main.recipe)
+                {
+                    if (!recipe.Disabled && recipe.Mod == mod)
+                    {
+                        RegisterRecipeSlot(recipe, false);
+                    }
+                }
+            }
+        }
         private void RegisterRecipeSlot(Recipe recipe, bool shimmer)
         {
             UIRecipeSlot slot = new(recipe, shimmer);

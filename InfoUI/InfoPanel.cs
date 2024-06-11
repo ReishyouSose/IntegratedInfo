@@ -30,15 +30,27 @@ namespace IntegratedInfo.InfoUI
                 int type = Main.mouseItem.type;
                 focus.item.SetDefaults(type);
                 //CheckRicpeFromItem(type);
-                CheckSourceFromItem(type);
+                //CheckSourceFromItem(type);
+                CheckVanillaNPCDrop();
             };
             bg.Register(focus);
+
+            UICornerPanel inputBg = new();
+            inputBg.SetSize(200, 30);
+            inputBg.SetPos(-200, 0, 1);
+            bg.Register(inputBg);
+
+            UIInputBox input = new("ModInternalName");
+            input.SetSize(0, 0, 1, 1);
+            //input.OnInputText += CheckRecipeFromMod;
+            inputBg.Register(input);
 
             UIAdjust adjust = new();
             bg.Register(adjust);
 
-            //RegisterRecipePanel(bg);
-            RegisterSourcePanel(bg);
+            // RegisterRecipePanel(bg);
+            //RegisterSourcePanel(bg);
+            RegisterNpcPanel(bg);
         }
         public override void Update(GameTime gt)
         {
@@ -108,6 +120,7 @@ namespace IntegratedInfo.InfoUI
             line.SetSize(0, 2, 1);
             view.AddElement(line);
         }
-        private void ExtraDraw(SpriteBatch sb) => extraDraw?.Invoke(sb, ChildrenElements[0].HitBox().TopLeft() + Vector2.UnitX * 10);
+        private void ExtraDraw(SpriteBatch sb)
+            => extraDraw?.Invoke(sb, ChildrenElements[0].HitBox().TopRight() + Vector2.UnitX * 10);
     }
 }
